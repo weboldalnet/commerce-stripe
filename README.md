@@ -70,7 +70,9 @@ nem kell felvenni); ha ez legyen az alapértelmezett fizetési mód: `COMMERCE_P
 3. A végleges állapotot a **webhook** is rögzíti: `POST /commerce/stripe/webhook` (a `web` csoporton kívül, CSRF nélkül,
    Stripe-aláírással). Események: `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
    `checkout.session.async_payment_failed`, `checkout.session.expired`.
-4. Elveszett webhookra: `php artisan commerce-stripe:reconcile` (a függő tranzakciókat kérdezi le; ütemezhető).
+4. Elveszett webhookra: a commerce-core (az ütemezett egyeztetést tartalmazó verziótól) 15 percenként magától lekérdezi
+   a függő fizetéseket (`commerce:reconcile-payments`, a szerver `schedule:run` cronjával); kézzel, vagy régebbi core-nál:
+   `php artisan commerce-stripe:reconcile`.
 
 A gazda-alkalmazás a commerce-core eseményeire (`PaymentSucceeded`, `PaymentFailed`, `PaymentCancelled`) iratkozik fel,
 és ott teljesíti a rendelést (zárolt sorral, az összeg és a pénznem ellenőrzésével).

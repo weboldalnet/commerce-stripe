@@ -52,7 +52,8 @@ class StripeSettingsService
     {
         if (self::$tableExists === null) {
             try {
-                self::$tableExists = \Illuminate\Support\Facades\Schema::hasTable((new StripeSetting())->getTable());
+                // a beállítás a közös (alapnyelvi) adatbázisban van — ott kell nézni, nem a kérés nyelvi DB-jében
+                self::$tableExists = \Weboldalnet\CommerceCore\Support\CommerceConnection::schema()->hasTable((new StripeSetting())->getTable());
             } catch (\Throwable $e) {
                 self::$tableExists = false;
             }

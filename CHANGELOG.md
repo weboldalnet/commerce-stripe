@@ -15,6 +15,8 @@ csak `.env`-ből beállított telepítések (pl. K&K Tudatos Könyvelés) válto
 - **Kapcsolatteszt** a Checkout-munkamenetek listázásával (korábban egyenleg-lekérés): a csak „Checkout Sessions” jogú
   korlátozott kulccsal (`rk_…`) is működik; a Stripe hibaüzenete nem jelenik meg szó szerint.
 - A webhook- és a visszatérési cím a site domainjéből (porttal), másolás gombbal; a helyi `stripe listen` parancs.
+- Az elmaradt webhookokat a commerce-core ütemezett `commerce:reconcile-payments` parancsa pótolja (a Stripe a
+  `queryStatus()`-szal részt vesz benne); a csomag saját `commerce-stripe:reconcile` parancsa kézi használatra marad.
 
 ## [1.0.0] - 2026-11-01
 ### Első változat

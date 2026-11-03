@@ -272,7 +272,12 @@
                     <code class="d-block p-2 bg-light rounded text-break">stripe listen --events {{ implode(',', $events) }} --forward-to {{ $webhookUrl }}</code>
                     <span class="text-muted fs-14 d-block mt-1">
                         A gépedre a Stripe nem tud webhookot küldeni: a Stripe CLI továbbítja, és kiírja a helyi aláíró titkot (whsec_…).
-                        Ha egy webhook elmarad, a <code>php artisan commerce-stripe:reconcile</code> parancs lekérdezi a függő fizetéseket (érdemes ütemezni).
+                        @if(class_exists(\Weboldalnet\CommerceCore\Console\ReconcilePaymentsCommand::class))
+                            Ha egy webhook elmarad, a commerce-core 15 percenként magától lekérdezi a függő fizetéseket
+                            (<code>commerce:reconcile-payments</code>, a szerver <code>schedule:run</code> cronjával).
+                        @else
+                            Ha egy webhook elmarad, a <code>php artisan commerce-stripe:reconcile</code> parancs lekérdezi a függő fizetéseket (érdemes ütemezni).
+                        @endif
                     </span>
                 </div>
 
