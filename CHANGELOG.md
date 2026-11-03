@@ -1,4 +1,13 @@
 ## [Unreleased]
+### Többnyelvű webshop: a fizetőoldal a vásárló nyelvén (az 1.0.2 után)
+- a Checkout `locale`-ja nem magyar rendelésnél a rendelés nyelve (a webshop a `PaymentRequestData::$language`-ben
+  adja, pl. `EN` → `en`; a szolgáltatói kódok is: `CZ` → `cs`, `GR` → `el`, `SI` → `sl`); magyar rendelésnél és ha a
+  hívó nem ad nyelvet (a core alapértéke `HU`), továbbra is az admin beállítás dönt (pl. `hu` vagy `auto`) — a
+  meglévő telepítések működése nem változik
+- a fizetés leírása és az összevont tételnév („Rendelés …”), valamint a név nélküli tétel („Tétel”) a rendelés nyelvén:
+  `resources/lang/{hu,en}/checkout.php`, kulcs `commerce-stripe::checkout.…`; új publish tag: `commerce-stripe-lang`
+- admin: a „Fizetőoldal nyelve” súgója jelzi, hogy a nem magyar rendelések a vásárló nyelvén nyílnak meg
+
 ### Admin beállításoldal a commerce-barion mintájára, adatbázisban tárolt beállítások
 **1 új migráció** (`commerce_stripe_settings`, `hasTable`-védelemmel) — frissítés után `php artisan migrate`.
 Visszafelé kompatibilis: ami az adminban nincs megadva (vagy a tábla még nem létezik), arra a `.env` érvényes, így a

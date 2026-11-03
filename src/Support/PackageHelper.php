@@ -25,6 +25,9 @@ class PackageHelper
         ],
     ];
 
+    // a fizetőoldal saját szövegeinek nyelvi fájljai (publish: commerce-stripe-lang)
+    const LANG_SOURCE = __DIR__.'/../../resources/lang';
+
     const PACKAGE_VIEW_EXTENDS = [
         'sidebar' => [
             'view_path' => '/resources/views/admin/package-container/admin-p-sidebar.blade.php',

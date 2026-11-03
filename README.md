@@ -55,6 +55,14 @@ COMMERCE_STRIPE_SESSION_LIFETIME=3600          # 1800–86400 mp
 
 Titkos kulcs nélkül (sem az adminban, sem a `.env`-ben) a provider nem regisztrálódik (nem kínálható fizetési módként).
 
+### Nyelv
+
+A fizetőoldal nyelve a beállított `locale` (admin, hiányában `COMMERCE_STRIPE_LOCALE`). Ha a hívó nem magyar nyelvű
+rendelést ad át (`PaymentRequestData::$language`, pl. a többnyelvű webshop `EN`-t), a fizetőoldal a rendelés nyelvén
+nyílik meg, ha a Stripe ismeri. A csomag saját szövegei (a fizetés leírása: „Rendelés …”, név nélküli tétel) szintén a
+rendelés nyelvén: `resources/lang/{hu,en}/checkout.php`; a projekt `lang/vendor/commerce-stripe/{nyelv}/checkout.php`
+fájlja kulcsonként felülírja őket (`php artisan vendor:publish --tag=commerce-stripe-lang`).
+
 A provider a kulccsal magától regisztrálódik a commerce-core `PaymentManager`-ébe (a `COMMERCE_PAYMENT_ENABLED` listába
 nem kell felvenni); ha ez legyen az alapértelmezett fizetési mód: `COMMERCE_PAYMENT_DEFAULT=stripe`.
 

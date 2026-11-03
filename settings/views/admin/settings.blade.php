@@ -228,7 +228,7 @@
                                         <option value="{{ $stripeValue }}" @if(old('locale', $stripeSettings['locale']) === $stripeValue) selected @endif>{{ $stripeName }}</option>
                                     @endforeach
                                 </select>
-                                <span class="text-muted fs-14">A Stripe fizetőoldalának nyelve.</span>
+                                <span class="text-muted fs-14">A Stripe fizetőoldalának nyelve. Többnyelvű webshopban a nem magyar nyelvű rendelések fizetőoldala a vásárló nyelvén nyílik meg.</span>
                             </div>
                             <label class="fw-600 d-block mb-1">Fizetési mód kódja</label>
                             <code>{{ $code }}</code>

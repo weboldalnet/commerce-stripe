@@ -18,6 +18,10 @@ class CommerceStripeServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
         $this->loadViewsFrom(__DIR__ . '/../settings/views', PackageHelper::PACKAGE_PREFIX);
 
+        // a fizetőoldal saját szövegei a rendelés nyelvén: commerce-stripe::checkout.…; a projekt
+        // lang/vendor/commerce-stripe/{locale}/checkout.php fájlja kulcsonként felülírja őket
+        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', PackageHelper::PACKAGE_PREFIX);
+
         // a beállítás-tábla migrációja (a csomag maga tölti be, mint a commerce-barion)
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
@@ -48,6 +52,10 @@ class CommerceStripeServiceProvider extends ServiceProvider
             $publishList[$publish['source']] = base_path($publish['destination']);
         }
         $this->publishes($publishList, PackageHelper::PACKAGE_PREFIX . '-all');
+
+        $this->publishes([
+            PackageHelper::LANG_SOURCE => $this->app->langPath('vendor/' . PackageHelper::PACKAGE_PREFIX),
+        ], PackageHelper::PACKAGE_PREFIX . '-lang');
     }
 
     public function register()

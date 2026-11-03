@@ -38,6 +38,15 @@ class StripePaymentProvider implements PaymentProviderInterface
         'checkout.session.expired',
     ];
 
+    /** A Stripe Checkout fizetőoldalának nyelvei (Stripe `locale`), amelyekre a rendelés nyelvét átvesszük */
+    const CHECKOUT_LOCALES = [
+        'bg', 'cs', 'da', 'de', 'el', 'en', 'es', 'et', 'fi', 'fil', 'fr', 'hr', 'hu', 'id', 'it', 'ja', 'ko', 'lt',
+        'lv', 'ms', 'mt', 'nb', 'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'th', 'tr', 'vi', 'zh',
+    ];
+
+    /** A fizetési szolgáltatóknál szokásos (nem ISO) nyelvkódok megfelelője */
+    const LANGUAGE_ALIASES = ['cz' => 'cs', 'gr' => 'el', 'si' => 'sl', 'se' => 'sv', 'dk' => 'da'];
+
     public function getCode()
     {
         return config('commerce-stripe.provider_code', 'stripe');
@@ -63,12 +72,12 @@ class StripePaymentProvider implements PaymentProviderInterface
                 'client_reference_id' => (string) ($data->orderNumber ?: $data->orderId),
                 'metadata' => $this->metadata($data),
                 'payment_intent_data' => [
-                    'description' => 'Rendelés ' . ($data->orderNumber ?: $data->orderId),
+                    'description' => self::text($data, 'order', ['number' => $data->orderNumber ?: $data->orderId]),
                     'metadata' => array_intersect_key($this->metadata($data), array_flip(['order_id', 'order_number'])),
                 ],
                 'success_url' => $this->returnEndpoint() . '?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => (string) ($data->extra['cancel_url'] ?? $data->returnUrl ?? url('/')),
-                'locale' => (string) StripeSettingsService::get('locale', 'hu'),
+                'locale' => self::checkoutLocale($data),
                 'expires_at' => time() + StripeSettingsService::sessionLifetime(),
             ];
             if ($data->customerEmail) {
@@ -194,7 +203,7 @@ class StripePaymentProvider implements PaymentProviderInterface
         foreach ((array) $data->items as $item) {
             $quantity = max(1, (int) ($item['quantity'] ?? 1));
             $unit = StripeClientFactory::toMinor($item['unit_price'] ?? (($item['total_price'] ?? 0) / $quantity), $currency);
-            $product = ['name' => mb_substr((string) ($item['name'] ?? 'Tétel'), 0, 250)];
+            $product = ['name' => mb_substr((string) ($item['name'] ?? self::text($data, 'item')), 0, 250)];
             if (!empty($item['description'])) {
                 $product['description'] = mb_substr((string) $item['description'], 0, 500);
             }
@@ -208,13 +217,41 @@ class StripePaymentProvider implements PaymentProviderInterface
                 'price_data' => [
                     'currency' => strtolower($currency),
                     'unit_amount' => $total,
-                    'product_data' => ['name' => 'Rendelés ' . ($data->orderNumber ?: $data->orderId)],
+                    'product_data' => ['name' => self::text($data, 'order', ['number' => $data->orderNumber ?: $data->orderId])],
                 ],
                 'quantity' => 1,
             ]];
         }
 
         return $lines;
+    }
+
+    /**
+     * A fizetőoldal nyelve: nem magyar rendelésnél a rendelés nyelve (a többnyelvű webshop a PaymentRequestData
+     * `language` mezőjében adja, pl. EN), egyébként az admin beállítás (pl. hu vagy auto). A HU a core alapértéke is
+     * (a nyelvet nem küldő hívónál), ezért annál a beállítás dönt — így ott a működés nem változik.
+     */
+    private static function checkoutLocale(PaymentRequestData $data): string
+    {
+        $language = self::languageCode($data);
+
+        return ($language !== 'hu' && in_array($language, self::CHECKOUT_LOCALES, true))
+            ? $language
+            : (string) StripeSettingsService::get('locale', 'hu');
+    }
+
+    /** A rendelés nyelve kisbetűs ISO-kóddal (a fizetési szolgáltatók kódjairól: CZ → cs, GR → el, SI → sl …) */
+    private static function languageCode(PaymentRequestData $data): string
+    {
+        $code = strtolower(trim((string) $data->language));
+
+        return self::LANGUAGE_ALIASES[$code] ?? ($code !== '' ? $code : 'hu');
+    }
+
+    /** A fizetőoldalon megjelenő saját szöveg a rendelés nyelvén (resources/lang/{nyelv}/checkout.php) */
+    private static function text(PaymentRequestData $data, string $key, array $replace = []): string
+    {
+        return (string) trans('commerce-stripe::checkout.' . $key, $replace, self::languageCode($data));
     }
 
     private function metadata(PaymentRequestData $data): array
