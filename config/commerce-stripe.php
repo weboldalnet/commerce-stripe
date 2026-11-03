@@ -30,11 +30,15 @@ return [
     | Kulcsok
     |--------------------------------------------------------------------------
     |
-    | A titkos kulcs (sk_test_… / sk_live_…) dönti el a módot: a teszt kulcs
-    | tesztfizetést indít. A kulcsok CSAK a .env-ben élnek (nem adatbázisban,
-    | nem az adminban) — az admin beállításoldal maszkolva mutatja őket.
-    | A publikus kulcs a hosztolt Checkouthoz nem kell; beágyazott fizetéshez
-    | tartjuk meg.
+    | A titkos kulcs (sk_test_… / sk_live_…, korlátozott: rk_…) dönti el a módot:
+    | a teszt kulcs tesztfizetést indít. 1.1.0 óta az admin beállításoldalon
+    | (/webshop/stripe/settings) is megadhatók — titkosítva az adatbázisba
+    | kerülnek, és elsőbbséget kapnak; ami ott nincs megadva, arra ez a .env-érték
+    | érvényes. A publikus kulcs a hosztolt Checkouthoz nem kell; a környezet-
+    | ellenőrzéshez és beágyazott fizetéshez tartjuk meg.
+    |
+    | Ugyanígy (admin, hiányában .env): enabled, payment_method_label, locale,
+    | payment_method_types, session_lifetime, webhook_secret.
     |
     */
     'secret_key' => env('COMMERCE_STRIPE_SECRET_KEY', ''),

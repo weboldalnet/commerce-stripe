@@ -6,13 +6,14 @@ use Stripe\StripeClient;
 use Weboldalnet\CommerceCore\Exceptions\PaymentException;
 
 /**
- * A Stripe-kliens egy helyen: a titkos kulcs a configból (.env), a mód a kulcs előtagjából.
+ * A Stripe-kliens egy helyen: a titkos kulcs az admin beállításból, hiányában a configból (.env); a mód a kulcs
+ * előtagjából.
  */
 class StripeClientFactory
 {
     public static function secretKey(): string
     {
-        return trim((string) config('commerce-stripe.secret_key', ''));
+        return trim((string) StripeSettingsService::get('secret_key', ''));
     }
 
     public static function isConfigured(): bool
@@ -45,7 +46,7 @@ class StripeClientFactory
     public static function make(): StripeClient
     {
         if (!self::isConfigured()) {
-            throw new PaymentException('A Stripe titkos kulcsa nincs beállítva (COMMERCE_STRIPE_SECRET_KEY).');
+            throw new PaymentException('A Stripe titkos kulcsa nincs beállítva (admin: Stripe beállítások, vagy COMMERCE_STRIPE_SECRET_KEY).');
         }
 
         return new StripeClient(['api_key' => self::secretKey()]);

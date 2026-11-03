@@ -8,6 +8,7 @@ use Weboldalnet\CommerceCore\Managers\PaymentManager;
 use Weboldalnet\CommerceStripe\Console\StripeReconcileCommand;
 use Weboldalnet\CommerceStripe\Providers\StripePaymentProvider;
 use Weboldalnet\CommerceStripe\Services\StripeClientFactory;
+use Weboldalnet\CommerceStripe\Services\StripeSettingsService;
 use Weboldalnet\CommerceStripe\Support\PackageHelper;
 
 class CommerceStripeServiceProvider extends ServiceProvider
@@ -17,19 +18,22 @@ class CommerceStripeServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
         $this->loadViewsFrom(__DIR__ . '/../settings/views', PackageHelper::PACKAGE_PREFIX);
 
+        // a beállítás-tábla migrációja (a csomag maga tölti be, mint a commerce-barion)
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+
         try {
             $paymentManager = $this->app->make(PaymentManager::class);
             $code = config('commerce-stripe.provider_code', 'stripe');
 
             $paymentManager->registerAvailable($code, [
-                'name' => (string) config('commerce-stripe.payment_method_label', 'Bankkártyás fizetés (Stripe)'),
+                'name' => (string) StripeSettingsService::get('payment_method_label', 'Bankkártyás fizetés (Stripe)'),
                 'settings_url' => '/webshop/stripe/settings',
                 'settings_label' => 'Stripe',
                 'online' => true,
             ]);
 
-            // csak bekapcsolva ÉS kulccsal: kulcs nélkül ne kínáljuk fizetési módként
-            if (filter_var(config('commerce-stripe.enabled', true), FILTER_VALIDATE_BOOLEAN) && StripeClientFactory::isConfigured()) {
+            // csak bekapcsolva ÉS kulccsal: kulcs nélkül ne kínáljuk fizetési módként (admin beállítás, hiányában .env)
+            if (StripeSettingsService::getBool('enabled', true) && StripeClientFactory::isConfigured()) {
                 $paymentManager->register($code, $this->app->make(StripePaymentProvider::class));
             }
         } catch (\Throwable $e) {

@@ -15,6 +15,7 @@ use Weboldalnet\CommerceCore\Exceptions\CallbackValidationException;
 use Weboldalnet\CommerceCore\Status\PaymentStatus;
 use Weboldalnet\CommerceStripe\Services\StripeClientFactory;
 use Weboldalnet\CommerceStripe\Services\StripeSessionMapper;
+use Weboldalnet\CommerceStripe\Services\StripeSettingsService;
 
 /**
  * Stripe Checkout (hosztolt fizetési oldal) a commerce-core-hoz.
@@ -44,7 +45,7 @@ class StripePaymentProvider implements PaymentProviderInterface
 
     public function getName()
     {
-        return (string) config('commerce-stripe.payment_method_label', 'Bankkártyás fizetés (Stripe)');
+        return (string) StripeSettingsService::get('payment_method_label', 'Bankkártyás fizetés (Stripe)');
     }
 
     public function isOnline()
@@ -67,14 +68,14 @@ class StripePaymentProvider implements PaymentProviderInterface
                 ],
                 'success_url' => $this->returnEndpoint() . '?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => (string) ($data->extra['cancel_url'] ?? $data->returnUrl ?? url('/')),
-                'locale' => (string) config('commerce-stripe.locale', 'hu'),
-                'expires_at' => time() + max(1800, min(86400, (int) config('commerce-stripe.session_lifetime', 3600))),
+                'locale' => (string) StripeSettingsService::get('locale', 'hu'),
+                'expires_at' => time() + StripeSettingsService::sessionLifetime(),
             ];
             if ($data->customerEmail) {
                 $params['customer_email'] = (string) $data->customerEmail;
             }
-            if ($types = (array) config('commerce-stripe.payment_method_types', [])) {
-                $params['payment_method_types'] = array_values($types);
+            if ($types = StripeSettingsService::paymentMethodTypes()) {
+                $params['payment_method_types'] = $types;
             }
 
             $session = StripeClientFactory::make()->checkout->sessions->create($params, [
@@ -122,9 +123,9 @@ class StripePaymentProvider implements PaymentProviderInterface
      */
     public function handleCallback(array $payload)
     {
-        $secret = trim((string) config('commerce-stripe.webhook_secret', ''));
+        $secret = trim((string) StripeSettingsService::get('webhook_secret', ''));
         if ($secret === '') {
-            throw new CallbackValidationException('A Stripe webhook-titok nincs beállítva (COMMERCE_STRIPE_WEBHOOK_SECRET).');
+            throw new CallbackValidationException('A Stripe webhook-titok nincs beállítva (admin: Stripe beállítások, vagy COMMERCE_STRIPE_WEBHOOK_SECRET).');
         }
 
         try {

@@ -21,7 +21,26 @@ Követelmény: `weboldalnet/commerce-core` **1.0.8** vagy újabb (`PaymentManage
 }
 ```
 
-## Konfiguráció (.env)
+## Konfiguráció
+
+Két forrás, ebben a sorrendben: **az admin beállításoldal** (`/webshop/stripe/settings`, 1.1.0 óta), hiányában a
+**`.env`**. A csak `.env`-ből beállított telepítések frissítés után is változatlanul működnek.
+
+### Admin (`/webshop/stripe/settings`)
+
+A commerce-barion beállításoldalának felépítésében: modul állapota (bekapcsolás, megnevezés a pénztárban), környezet
+(a titkos kulcs előtagjából), hitelesítés (titkos kulcs, webhook aláíró titok, publikus kulcs), fizetési beállítások
+(fizetési lehetőségek, fizetési ablak), megjelenés (fizetőoldal nyelve), webhook- és visszatérési cím, kapcsolatteszt.
+
+- A titkos kulcs és a webhook-titok **titkosítva** kerül a `commerce_stripe_settings` táblába (APP_KEY), az oldalra
+  soha nem kerül vissza (csak előtag + utolsó 4 karakter). Üresen hagyva megmarad; a „törlés” jelölővel az adminban
+  mentett érték törölhető, ekkor újra a `.env` érvényes.
+- Mentéskor ellenőrzi a kulcsok formáját, és hogy a publikus és a titkos kulcs ugyanabból a környezetből való-e.
+- Ajánlott a **korlátozott kulcs** (`rk_…`) egyetlen joggal: *Checkout Sessions — Write*. A kapcsolatteszt is ezzel a
+  joggal fut (munkamenet-lista).
+- Frissítés után: `php artisan migrate` (a tábla; amíg nincs, a `.env` érvényes).
+
+### .env
 
 ```env
 COMMERCE_STRIPE_SECRET_KEY=sk_test_...        # sk_live_… = éles terhelés!
@@ -34,8 +53,7 @@ COMMERCE_STRIPE_PAYMENT_METHOD_TYPES=          # üresen a Dashboardon bekapcsol
 COMMERCE_STRIPE_SESSION_LIFETIME=3600          # 1800–86400 mp
 ```
 
-A kulcsok CSAK a `.env`-ben élnek: az admin beállításoldal (`/webshop/stripe/settings`) maszkolva mutatja őket, és
-kapcsolattesztet ad, de írni nem enged. Titkos kulcs nélkül a provider nem regisztrálódik (nem kínálható fizetési módként).
+Titkos kulcs nélkül (sem az adminban, sem a `.env`-ben) a provider nem regisztrálódik (nem kínálható fizetési módként).
 
 A provider a kulccsal magától regisztrálódik a commerce-core `PaymentManager`-ébe (a `COMMERCE_PAYMENT_ENABLED` listába
 nem kell felvenni); ha ez legyen az alapértelmezett fizetési mód: `COMMERCE_PAYMENT_DEFAULT=stripe`.
